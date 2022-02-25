@@ -1,0 +1,12 @@
+1. Project setup
+2. Player creation
+3. gravity
+4. player movement
+5. platforms
+6. scroll the background
+7. win scenario
+8. image platforms
+9. parallax scrooll
+10. death pits
+11. level creation
+12. fine-tuning
