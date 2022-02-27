@@ -16,8 +16,10 @@ class Player {
         this.width = 50;
         this.touchedSurface = false;
         this.upJumpReleased = false;
+        this.falling = false;
+        this.hitPlatformBottom = false;
         this.position = {
-            x: 100,
+            x: 305,
             y: 100
         }
         this.velocity = {
@@ -38,30 +40,41 @@ class Player {
             this.velocity.y += gravity;
         } else {
             this.velocity.y = 0;
+            this.upJumpReleased = true;
             this.touchedSurface = true;
         }
     }
 }
 
 class Platform {
-    constructor({positionX, positionY, width, height}) {
-        this.width = width;
-        this.height = height;
+    constructor({topImgSource, bottomImgSource, positionX, positionY, numberOfPlatforms}) {
+        this.topImage = new Image();
+        this.bottomImage = new Image();
+        this.topImgSource = topImgSource;
+        this.bottomImgSource = bottomImgSource;
+        this.width = 0;
+        this.height = 0;
         this.touchedSurface = false;
         this.upJumpReleased = false;
+        this.numberOfPlatforms = numberOfPlatforms;
         this.position = {
             x: positionX,
             y: positionY
         }
-        // this.velocity = {
-        //     x: 0,
-        //     y: 0
-        // }
+        this.velocity = {
+            x: 2,
+            y: 2
+        }
     }
 
     draw () {
-        ctx.fillStyle = 'black';
-        ctx.fillRect(this.position.x, this.position.y, this.width, this.height);
+        this.topImage.src = this.topImgSource;
+        this.bottomImage.src = this.bottomImgSource;
+        this.width = this.topImage.width;
+        this.height = this.bottomImage.height;
+        ctx.drawImage(this.topImage, this.position.x, this.position.y, this.width, this.height); 
+        ctx.drawImage(this.bottomImage, this.position.x, this.position.y + this.height, this.width, this.height);
+         
     }
 
     update () {
@@ -69,11 +82,32 @@ class Platform {
     }
 }
 
-//create player
+
+const platformSprites = {
+    grassMid: "/platformerGraphicsDeluxe_Updated/Tiles/grassMid.png",
+    grassCenter: "/platformerGraphicsDeluxe_Updated/Tiles/grassCenter.png"
+
+}
+const platforms = [];
+let platFormsStart = 0;
+
+function addPlatforms (num, start) {
+    for(let i = 0; i < num; i++) {
+        platforms.push(new Platform({topImgSource: platformSprites.grassMid, bottomImgSource: platformSprites.grassCenter, positionX: start, positionY: 430}));
+        start += 70;
+    }
+
+    return start;
+}
+
+platFormsStart += addPlatforms(8, 0);
+
+platFormsStart += addPlatforms(5, platFormsStart + 200);
+
+platFormsStart += addPlatforms(8, platFormsStart + 300);
+
+// create player
 const player = new Player();
-
-const platforms = [new Platform({positionX: 200, positionY: 350, width: 300, height: 30})]
-
 
 // keys state
 const keys = {
@@ -94,22 +128,33 @@ function animate () {
     // update platforms
     platforms.forEach(platform => {
         platform.update();
-        if(player.position.y + player.height >= platform.position.y && player.position.x + player.width >= platform.position.x && player.position.x <= platform.position.x + platform.width) {
+        // top of platform 
+        if(player.position.y + player.height + player.velocity.y >= platform.position.y && player.position.y <= platform.position.y - 1 && player.position.x + player.width >= platform.position.x && player.position.x <= platform.position.x + platform.width && player.velocity.y > 0) {
             player.velocity.y = 0;
-            // graviwdty = 0;
             player.touchedSurface = true;
         }
     })
 
     if (keys.right) {
-        player.position.x += 5;
+        if (player.position.x < 700) {
+            player.position.x += 5;
+        } else {
+            platforms.forEach(platform => {
+                platform.position.x -= 5;
+            });
+        }
+    
     }
 
     if (keys.left) {
-        player.position.x -= 5;
-    }
-
-    
+        if (player.position.x > 300) {
+            player.position.x -= 5;
+        } else {
+            platforms.forEach(platform => {
+                platform.position.x += 5;
+            });
+        }
+    }    
 }
 
 animate();
@@ -121,6 +166,7 @@ window.addEventListener('keydown', ({key}) => {
 
     switch(key.toLocaleLowerCase()) {
         case 'w':
+            
           if (player.touchedSurface && player.upJumpReleased) {
               player.velocity.y -= 40;
               player.touchedSurface = false;
