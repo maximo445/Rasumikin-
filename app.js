@@ -10,6 +10,9 @@ canvas.height = 560;
 // gravity
 let gravity = 2;
 
+// distance
+let distance = 0;
+
 class Player {
     constructor() {
         this.height = 50;
@@ -47,7 +50,7 @@ class Player {
 }
 
 class Platform {
-    constructor({topImgSource, bottomImgSource, positionX, positionY, numberOfPlatforms}) {
+    constructor({topImgSource, bottomImgSource = null, positionX, positionY, numberOfPlatforms}) {
         this.topImage = new Image();
         this.bottomImage = new Image();
         this.topImgSource = topImgSource;
@@ -73,12 +76,21 @@ class Platform {
         this.width = this.topImage.width;
         this.height = this.bottomImage.height;
         ctx.drawImage(this.topImage, this.position.x, this.position.y, this.width, this.height); 
-        ctx.drawImage(this.bottomImage, this.position.x, this.position.y + this.height, this.width, this.height);
-         
+        ctx.drawImage(this.bottomImage, this.position.x, this.position.y + this.height, this.width, this.height);         
     }
 
     update () {
         this.draw();
+    }
+}
+
+class TopPlatform extends Platform {
+    draw () {
+        this.topImage.src = this.topImgSource;
+        this.bottomImage.src = this.bottomImgSource;
+        this.width = this.topImage.width;
+        this.height = this.topImage.height;
+        ctx.drawImage(this.topImage, this.position.x, this.position.y, this.width, this.height); 
     }
 }
 
@@ -88,23 +100,31 @@ const platformSprites = {
     grassCenter: "/platformerGraphicsDeluxe_Updated/Tiles/grassCenter.png"
 
 }
+
+// bottom platforms creation
+
 const platforms = [];
 let platFormsStart = 0;
 
-function addPlatforms (num, start) {
+function createPlatforms ({num, gapWith}) {
+    platFormsStart += gapWith;
     for(let i = 0; i < num; i++) {
-        platforms.push(new Platform({topImgSource: platformSprites.grassMid, bottomImgSource: platformSprites.grassCenter, positionX: start, positionY: 430}));
-        start += 70;
+        platforms.push(new Platform({topImgSource: platformSprites.grassMid, bottomImgSource: platformSprites.grassCenter, positionX: platFormsStart, positionY: 430}));
+        platFormsStart += 70;
     }
-
-    return start;
 }
 
-platFormsStart += addPlatforms(8, 0);
+const platFormParameters = [{num: 8, gapWith: 0}, {num: 14, gapWith: 400}, {num: 8, gapWith: 250}, {num: 20, gapWith: 250}, {num: 8, gapWith: 250},{num: 15, gapWith: 250}, {num: 8, gapWith: 200}, {num: 20, gapWith: 250}];
 
-platFormsStart += addPlatforms(5, platFormsStart + 200);
+platFormParameters.forEach(param => {
+    createPlatforms(param);
+});
 
-platFormsStart += addPlatforms(8, platFormsStart + 300);
+// top platforms creation
+const topPlatforms = [];
+let topPlatformStart = 100;
+
+const topPlatform = new TopPlatform({topImgSource: platformSprites.grassMid, positionX: 700, positionY: 200})
 
 // create player
 const player = new Player();
@@ -125,6 +145,14 @@ function animate () {
     // update player
     player.update();
 
+    // update top platforms
+    topPlatform.update();
+
+    if(player.position.y + player.height + player.velocity.y >= topPlatform.position.y && player.position.y <= topPlatform.position.y - 1 && player.position.x + player.width >= topPlatform.position.x && player.position.x <= topPlatform.position.x + topPlatform.width && player.velocity.y > 0) {
+        player.velocity.y = 0;
+        player.touchedSurface = true;
+    }
+
     // update platforms
     platforms.forEach(platform => {
         platform.update();
@@ -142,18 +170,35 @@ function animate () {
             platforms.forEach(platform => {
                 platform.position.x -= 5;
             });
+
+            topPlatform.position.x -= 5;
         }
+
+        distance += 5;
     
     }
 
+    // continue here solving the problem of near start behaviour
+
     if (keys.left) {
-        if (player.position.x > 300) {
-            player.position.x -= 5;
+
+        if (distance > 300) {
+            if (player.position.x > 300) {
+                player.position.x -= 5;
+            } else {
+                platforms.forEach(platform => {
+                    platform.position.x += 5;
+                });
+    
+                topPlatform.position.x +=5;
+            }
+            distance -= 5;
         } else {
-            platforms.forEach(platform => {
-                platform.position.x += 5;
-            });
+            player.position.x -= 5;
+            distance -= 5;
         }
+
+
     }    
 }
 
