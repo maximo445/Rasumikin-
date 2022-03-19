@@ -11,12 +11,14 @@ canvas.height = 560;
 let gravity = 2;
 
 // distance
-let distance = 0;
+let distance = 305;
 
 class Player {
     constructor() {
-        this.height = 50;
-        this.width = 50;
+        this.image = new Image(80,100);
+        this.image.src = '/Graphs/walkRight.png'; 
+        this.height = this.image.height;
+        this.width = this.image.width;
         this.touchedSurface = false;
         this.upJumpReleased = false;
         this.falling = false;
@@ -29,14 +31,29 @@ class Player {
             x: 0,
             y: 0
         }
+        this.frames = 0;
+        this.updateFrame1 = true;
+        this.updateFrame2 = true;
     }
 
     draw () {
-        ctx.fillStyle = 'red';
-        ctx.fillRect(this.position.x, this.position.y, this.width, this.height);
+        ctx.drawImage(
+            this.image, 
+            72 * this.frames,
+            0,
+            72,
+            97,
+            this.position.x, 
+            this.position.y, 
+            this.image.width, 
+            this.image.height);
     }
 
     update () {
+        this.frames++;
+        if (this.frames > 8) {
+            this.frames = 0;
+        }
         this.draw();
         if (this.position.y + this.height + this.velocity.y < canvas.height) {
             this.position.y += this.velocity.y;
@@ -148,7 +165,7 @@ function animate () {
     // update top platforms
     topPlatform.update();
 
-    if(player.position.y + player.height + player.velocity.y >= topPlatform.position.y && player.position.y <= topPlatform.position.y - 1 && player.position.x + player.width >= topPlatform.position.x && player.position.x <= topPlatform.position.x + topPlatform.width && player.velocity.y > 0) {
+    if(player.position.y + player.height + player.velocity.y >= topPlatform.position.y + 1 && player.position.y <= topPlatform.position.y - 1 && player.position.x + player.width >= topPlatform.position.x && player.position.x <= topPlatform.position.x + topPlatform.width && player.velocity.y > 0) {
         player.velocity.y = 0;
         player.touchedSurface = true;
     }
@@ -193,7 +210,7 @@ function animate () {
                 topPlatform.position.x +=5;
             }
             distance -= 5;
-        } else {
+        } else if (distance > 0) {
             player.position.x -= 5;
             distance -= 5;
         }
