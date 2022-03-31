@@ -13,16 +13,23 @@ let gravity = 2;
 // distance
 let distance = 305;
 
+// sprite state
+const sprite = {
+    rightWalk: '/Graphs/walkRight.png',
+    stand: '/platformerGraphicsDeluxe_Updated/Player/p1_stand.png'
+}
+
 class Player {
     constructor() {
         this.image = new Image(80,100);
-        this.image.src = '/Graphs/walkRight.png'; 
+        this.image.src = sprite.stand; 
         this.height = this.image.height;
         this.width = this.image.width;
         this.touchedSurface = false;
         this.upJumpReleased = false;
         this.falling = false;
         this.hitPlatformBottom = false;
+        this.updateFramesCount = 0;
         this.position = {
             x: 305,
             y: 100
@@ -37,20 +44,41 @@ class Player {
     }
 
     draw () {
-        ctx.drawImage(
-            this.image, 
-            72 * this.frames,
-            0,
-            72,
-            97,
-            this.position.x, 
-            this.position.y, 
-            this.image.width, 
-            this.image.height);
+        if (player.image.src !== sprite.stand) {
+            ctx.drawImage(
+                this.image, 
+                0,
+                0,
+                72,
+                97,
+                this.position.x, 
+                this.position.y, 
+                this.image.width, 
+                this.image.height);
+                console.log("stading")
+
+        } else {
+            ctx.drawImage(
+                this.image, 
+                72 * this.frames,
+                0,
+                72,
+                97,
+                this.position.x, 
+                this.position.y, 
+                this.image.width, 
+                this.image.height);
+                console.log("moving")
+        }
     }
 
     update () {
-        this.frames++;
+        this.updateFramesCount++;
+        if (this.updateFramesCount % 2 === 0 && player.image.src !== sprite.stand) {
+            
+           this.frames++;
+            
+        }
         if (this.frames > 8) {
             this.frames = 0;
         }
@@ -181,6 +209,9 @@ function animate () {
     })
 
     if (keys.right) {
+        player.image.src = sprite.rightWalk;
+        console.log('moving right');
+
         if (player.position.x < 700) {
             player.position.x += 5;
         } else {
@@ -193,12 +224,9 @@ function animate () {
 
         distance += 5;
     
-    }
-
-    // continue here solving the problem of near start behaviour
-
-    if (keys.left) {
-
+    } else if (keys.left) {
+        player.image.src = sprite.rightWalk;
+        
         if (distance > 300) {
             if (player.position.x > 300) {
                 player.position.x -= 5;
@@ -216,6 +244,8 @@ function animate () {
         }
 
 
+    } else {
+        player.image.src = sprite.stand;
     }    
 }
 
